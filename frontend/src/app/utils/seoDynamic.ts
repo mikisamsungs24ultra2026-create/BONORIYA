@@ -126,7 +126,9 @@ export function buildLodgingSchema(p: PartnerProperty, extra?: {
   images?: string[]; url?: string;
 }): object {
   const url = extra?.url || propertyUrl(p);
-  const image = extra?.images?.length ? extra.images : (p.image ? [p.image] : []);
+  const imageCandidates = (extra?.images?.length ? extra.images : (p.image ? [p.image] : []))
+    .filter(u => _isValidExternalUrl(u));
+  const image = imageCandidates.length ? imageCandidates : undefined;
   const priceNum = Number(p.pricePerNight) || undefined;
   const ratingNum = Number(p.rating);
   const hasRating = !Number.isNaN(ratingNum) && ratingNum > 0;
@@ -192,7 +194,7 @@ export function buildDayTripSchema(dt: DayTripProperty): object {
     name: dt.name,
     description: clip(dt.shortDescription || dt.aboutUs || `${dt.name} — day trip experience in ${dt.location} with BONORIYA.`, 300),
     url,
-    image: uniq([dt.heroImage, ...(dt.gallery || []).map(g => g.url)]).filter(Boolean),
+    image: uniq([dt.heroImage, ...(dt.gallery || []).map(g => g.url)]).filter(u => _isValidExternalUrl(u)),
     touristType: ['Eco Tourism', 'Cultural Tourism', 'Adventure Tourism'],
     address: {
       '@type': 'PostalAddress',
@@ -377,7 +379,9 @@ export function applyPropertySEO(
     'northeast india stays', 'BONORIYA', 'bonoriya.com',
   ].filter(Boolean)).join(', ');
 
-  const ogImage = extras?.images?.[0] || p.image || DEFAULT_OG_IMAGE;
+  const ogImage = _isValidExternalUrl(extras?.images?.[0]) ? extras!.images![0]
+    : _isValidExternalUrl(p.image) ? p.image
+    : DEFAULT_OG_IMAGE;
 
   const breadcrumbs = [
     { name: 'Home', url: `${BASE_URL}/` },
@@ -398,6 +402,15 @@ export function applyPropertySEO(
       buildBreadcrumbSchema(breadcrumbs),
     ],
   });
+}
+
+/** True when a URL string can be used in og:image (must be absolute http(s)). */
+function _isValidExternalUrl(u: string | undefined | null): boolean {
+  if (!u) return false;
+  const s = String(u).trim();
+  if (!s) return false;
+  if (s.startsWith('data:') || s.startsWith('blob:')) return false;
+  return s.startsWith('http://') || s.startsWith('https://');
 }
 
 export function applyDayTripSEO(dt: DayTripProperty) {
@@ -421,7 +434,8 @@ export function applyDayTripSEO(dt: DayTripProperty) {
     ...(dt.highlights || []).map(h => h.toLowerCase()),
   ]).slice(0, 20).join(', ');
 
-  const ogImage = dt.heroImage || DEFAULT_OG_IMAGE;
+  // Prefer real property image; fall back to og-banner when hero is base64/blob/empty
+  const ogImage = _isValidExternalUrl(dt.heroImage) ? dt.heroImage : DEFAULT_OG_IMAGE;
 
   const breadcrumbs = [
     { name: 'Home', url: `${BASE_URL}/` },
