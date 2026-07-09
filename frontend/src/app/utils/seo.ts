@@ -94,6 +94,16 @@ const PREFAB_KEYWORDS = PREFAB_KW.join(', ');
 // ─── Page configs ─────────────────────────────────────────────────────────────
 
 export const PAGE_SEO: Record<string, PageSEO> = {
+  gateway: {
+    title: 'Explore Bonoriya | Northeast India Stays, Prefab & Day Trips',
+    description: 'Explore Bonoriya — book handpicked hotels, homestays and eco resorts, discover offbeat destinations, day trips and prefab cottages across Northeast India.',
+    keywords: BASE_KEYWORDS,
+    robots: 'index,follow',
+    ogType: 'website',
+    ogTitle: 'Explore BONORIYA — Northeast India Stays, Day Trips & Prefab',
+    schemaType: 'home',
+    canonical: `${BASE_URL}/`,
+  },
   home: {
     title: 'Bonoriya | Book Resorts & Homestays in Northeast India',
     description: 'Book resorts, hotels and homestays across Northeast India with Bonoriya. Also explore prefab cottages, modular resorts in Assam.',
@@ -102,7 +112,7 @@ export const PAGE_SEO: Record<string, PageSEO> = {
     ogType: 'website',
     ogTitle: 'BONORIYA — Northeast India Stays & Prefab Cottages',
     schemaType: 'home',
-    canonical: `${BASE_URL}/`,
+    canonical: `${BASE_URL}/home`,
   },
   'book-stays': {
     title: 'Book Hotels, Resorts & Homestays in Northeast India — Bonoriya',

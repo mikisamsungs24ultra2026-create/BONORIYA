@@ -42,6 +42,7 @@ PUBLIC_DIR = Path(__file__).parent.parent / "frontend" / "public"
 
 CORE_PAGES = [
     ("/", "1.0", "weekly"),
+    ("/home", "0.90", "weekly"),
     ("/book-stays", "0.95", "daily"),
     ("/our-properties", "0.90", "weekly"),
     ("/day-trip", "0.90", "weekly"),

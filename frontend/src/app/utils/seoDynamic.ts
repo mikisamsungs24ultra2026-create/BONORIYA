@@ -579,7 +579,8 @@ export function parseRoute(pathname?: string): ParsedRoute {
   const path = (pathname || window.location.pathname || '/').replace(/\/+$/, '') || '/';
   const seg = path.split('/').filter(Boolean);
 
-  if (seg.length === 0) return { page: 'home' };
+  // Root "/" → gateway landing page ("Explore Bonoriya")
+  if (seg.length === 0) return { page: 'gateway' };
   const [root, tail] = seg;
 
   if (root === 'properties' && tail) return { page: 'book-stays', entityType: 'property', slug: tail };
@@ -588,7 +589,7 @@ export function parseRoute(pathname?: string): ParsedRoute {
 
   // Direct page slugs — map to page keys
   const direct = new Set([
-    'home', 'book-stays', 'our-properties', 'prefab', 'day-trip', 'blogs', 'contact',
+    'home', 'gateway', 'book-stays', 'our-properties', 'prefab', 'day-trip', 'blogs', 'contact',
     'destinations', 'partner-login', 'admin',
     'stays-in-assam', 'stays-in-meghalaya', 'stays-in-arunachal-pradesh', 'stays-in-nagaland',
     'stays-in-manipur', 'stays-in-mizoram', 'stays-in-tripura', 'stays-in-sikkim',
@@ -598,7 +599,7 @@ export function parseRoute(pathname?: string): ParsedRoute {
   ]);
   if (direct.has(root)) return { page: root };
 
-  return { page: 'home' };
+  return { page: 'gateway' };
 }
 
 export function pushRoute(path: string) {

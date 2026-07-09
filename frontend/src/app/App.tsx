@@ -63,9 +63,9 @@ export default function App() {
   useEffect(() => {
     if (!urlSyncReady) return;
     const map: Record<string, string> = {
-      home: '/',
-      gateway: '/',
-      admin: window.location.pathname,
+      gateway: '/',       // "/" ⇒ Explore Bonoriya gateway landing page
+      home:    '/home',
+      admin:   window.location.pathname,
     };
     const path = map[currentPage] ?? `/${currentPage}`;
     const already = window.location.pathname;
@@ -174,18 +174,19 @@ export default function App() {
     const route = parseRoute();
     if (window.location.pathname === '/admin' || route.page === 'admin') {
       setCurrentPage('admin');
-    } else if (route.page && route.page !== 'home' && !['partner-login'].includes(route.page)) {
-      // Map URL page slug → internal state so deep links work
+    } else if (route.page && !['partner-login'].includes(route.page)) {
+      // Map URL page slug → internal state so deep links work.
+      // "/" ⇒ 'gateway' (Explore Bonoriya), "/home" ⇒ 'home'.
       setCurrentPage(route.page);
     }
     // Enable URL push sync only AFTER initial URL is parsed so we don't
-    // overwrite deep links (e.g., /properties/:slug) with the default 'gateway'.
+    // overwrite deep links (e.g., /properties/:slug) with the default page.
     setUrlSyncReady(true);
 
     // Listen for browser back/forward to sync state
     const onPop = () => {
       const r = parseRoute();
-      setCurrentPage(r.page === 'admin' ? 'admin' : r.page || 'home');
+      setCurrentPage(r.page === 'admin' ? 'admin' : r.page || 'gateway');
     };
     window.addEventListener('popstate', onPop);
 
