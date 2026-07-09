@@ -293,7 +293,7 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
 
   // Pointer drag handlers — works for mouse + touch via Pointer Events
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    try { (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId); } catch { /* ignore */ }
     dragRef.current = { dx: e.clientX - btnPos.x, dy: e.clientY - btnPos.y, moved: false };
     setDragging(true);
   };
@@ -312,7 +312,15 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
   };
   const onPointerUp = () => {
     if (dragging) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(btnPos)); } catch { /* ignore */ }
+      if (dragRef.current.moved) {
+        // Real drag → persist position
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(btnPos)); } catch { /* ignore */ }
+      } else {
+        // No drag → treat as click and toggle the chat window.
+        // We do it here because setPointerCapture on the wrapper prevents
+        // the native click event from reaching the child <button>.
+        setOpen(o => !o);
+      }
     }
     setDragging(false);
   };
@@ -540,10 +548,13 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
         </span>
         <button
           data-testid="bonoriya-ai-toggle"
+          type="button"
           onClick={(e) => {
-            // Suppress click if the user actually dragged the button
-            if (dragRef.current.moved) { e.preventDefault(); return; }
-            setOpen(o => !o);
+            // Fallback for synthetic .click() invocations (e.g., automated
+            // tests) — real user clicks are handled by the wrapper's
+            // onPointerUp so that drag vs. click can be distinguished.
+            if (!dragging && !dragRef.current.moved) setOpen(o => !o);
+            e.stopPropagation();
           }}
           className="relative group flex items-center gap-2.5 pl-3.5 pr-4 h-13 bg-forest-900 text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300"
           style={{ height: 52, transition: 'box-shadow 0.25s cubic-bezier(0.34,1.4,0.64,1)' }}

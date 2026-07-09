@@ -1,0 +1,36 @@
+{
+  "summary": "Retested BonoriyaAI floating-button click-to-open fix. ALL previously failing scenarios now PASS. Desktop real mouse click opens/closes the chat, mouse drag moves the button and does NOT open chat (position persisted in localStorage), /admin still excludes the widget on both desktop and mobile, mobile touch tap opens chat, and mobile touch drag moves the button without opening chat. Responsive widths (mobile=366, desktop=380) and resize clamping confirmed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "passed_tests": {
+    "desktop_1920x800_click_opens_chat": true,
+    "desktop_1920x800_second_click_closes_chat": true,
+    "desktop_mouse_drag_moves_button_>50px": true,
+    "desktop_mouse_drag_does_not_open_chat": true,
+    "localStorage_bonoriya_ai_button_pos_v1_persisted": true,
+    "admin_desktop_no_widget": true,
+    "admin_mobile_no_widget": true,
+    "mobile_390x844_touch_tap_opens_chat": true,
+    "mobile_touch_drag_moves_button": true,
+    "mobile_touch_drag_does_not_open_chat": true,
+    "mobile_chat_width_366": true,
+    "desktop_chat_width_380": true,
+    "resize_1920->500_keeps_button_onscreen": true
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "onPointerUp click-toggle uses the `dragging` state closure — since React state updates from setDragging in onPointerDown are asynchronous, synthetic pointerdown+pointerup dispatched in the same microtask see stale `dragging=false` and the toggle never fires. Real user pointer events work fine (verified by page.mouse.click). Any future automated test using dispatchEvent must insert an await between pointerdown and pointerup (>=50ms) to let React flush; alternatively the component could use a ref for dragging state to make it fully test-friendly.",
+    "vite.config.ts server.allowedHosts:true confirmed present — preview URL loads correctly."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "100% (13/13 scenarios)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The click-to-open regression is fully fixed by moving the toggle into onPointerUp (gated by !dragRef.current.moved) and wrapping setPointerCapture in try/catch. Note: test-only caveat — synthetic PointerEvents dispatched via evaluate() must have an async gap (>=50ms) between pointerdown and pointerup for the toggle to fire, because setDragging is a React state update, not a ref."
+}
