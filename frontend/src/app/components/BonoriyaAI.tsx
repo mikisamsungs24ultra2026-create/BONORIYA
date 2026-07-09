@@ -9,8 +9,8 @@
  *   • Fully self-contained; requires only `setCurrentPage` prop
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, ChevronDown, Phone } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { X, Send, Sparkles, ChevronDown, Phone, GripVertical } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -231,6 +231,113 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // ── Draggable button position (persisted per device) ─────────────────────
+  // Uses viewport-relative coords so the button repositions cleanly on
+  // rotate / resize. Falls back to the default bottom-right corner.
+  const STORAGE_KEY = 'bonoriya_ai_button_pos_v1';
+  const BTN_SIZE = { w: 170, h: 52 };   // approximate collapsed button footprint
+  const MARGIN = 12;
+
+  const getViewport = () => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    h: typeof window !== 'undefined' ? window.innerHeight : 768,
+  });
+
+  const defaultPos = useCallback(() => {
+    const { w, h } = getViewport();
+    return {
+      x: Math.max(MARGIN, w - BTN_SIZE.w - MARGIN),
+      y: Math.max(MARGIN, h - BTN_SIZE.h - MARGIN),
+    };
+  }, []);
+
+  const [btnPos, setBtnPos] = useState<{ x: number; y: number }>(defaultPos);
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<{ dx: number; dy: number; moved: boolean }>({ dx: 0, dy: 0, moved: false });
+
+  // Load saved position on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        const { w, h } = getViewport();
+        // Clamp to current viewport in case the screen shrank since last save
+        setBtnPos({
+          x: Math.min(Math.max(MARGIN, p.x), w - BTN_SIZE.w - MARGIN),
+          y: Math.min(Math.max(MARGIN, p.y), h - BTN_SIZE.h - MARGIN),
+        });
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // Reposition on viewport resize / orientation change so the button never
+  // ends up off-screen after a device rotation or window resize.
+  useEffect(() => {
+    const onResize = () => {
+      setBtnPos(prev => {
+        const { w, h } = getViewport();
+        return {
+          x: Math.min(Math.max(MARGIN, prev.x), w - BTN_SIZE.w - MARGIN),
+          y: Math.min(Math.max(MARGIN, prev.y), h - BTN_SIZE.h - MARGIN),
+        };
+      });
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+
+  // Pointer drag handlers — works for mouse + touch via Pointer Events
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+    dragRef.current = { dx: e.clientX - btnPos.x, dy: e.clientY - btnPos.y, moved: false };
+    setDragging(true);
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+    const { w, h } = getViewport();
+    const nx = Math.min(Math.max(MARGIN, e.clientX - dragRef.current.dx), w - BTN_SIZE.w - MARGIN);
+    const ny = Math.min(Math.max(MARGIN, e.clientY - dragRef.current.dy), h - BTN_SIZE.h - MARGIN);
+    // Detect real drag (>4px) so a plain click still opens the chat
+    if (!dragRef.current.moved) {
+      const dxAbs = Math.abs(e.clientX - (btnPos.x + dragRef.current.dx));
+      const dyAbs = Math.abs(e.clientY - (btnPos.y + dragRef.current.dy));
+      if (dxAbs > 4 || dyAbs > 4) dragRef.current.moved = true;
+    }
+    setBtnPos({ x: nx, y: ny });
+  };
+  const onPointerUp = () => {
+    if (dragging) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(btnPos)); } catch { /* ignore */ }
+    }
+    setDragging(false);
+  };
+
+  // Compute chat-window anchor so it opens near the button and never overflows.
+  const chatAnchor = useMemo(() => {
+    const { w, h } = getViewport();
+    const isMobile = w < 640;
+    // Mobile: full-width bottom sheet anchored just above the button
+    if (isMobile) {
+      return {
+        left: MARGIN,
+        top: undefined as number | undefined,
+        bottom: Math.max(MARGIN, h - btnPos.y + 12),
+        width: w - MARGIN * 2,
+      };
+    }
+    // Desktop / tablet: 380px window aligned to button's right edge, opening up
+    const winW = 380;
+    const winH = Math.min(560, h - MARGIN * 2 - BTN_SIZE.h - 24);
+    const left = Math.max(MARGIN, Math.min(btnPos.x + BTN_SIZE.w - winW, w - winW - MARGIN));
+    const bottom = Math.max(MARGIN, h - btnPos.y + 12);
+    return { left, bottom, top: undefined, width: winW, maxHeight: winH };
+  }, [btnPos]);
+
   // Stop pulse after first open
   useEffect(() => {
     if (open) setPulsing(false);
@@ -275,9 +382,15 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
     <>
       {/* ── Chat Window ── */}
       <div
-        className="fixed bottom-24 right-5 z-50 w-[360px] sm:w-[380px] flex flex-col"
+        data-testid="bonoriya-ai-chat"
+        className="fixed z-[60] flex flex-col"
         style={{
-          maxHeight: 'calc(100vh - 120px)',
+          left: chatAnchor.left,
+          right: undefined,
+          bottom: chatAnchor.bottom,
+          top: chatAnchor.top,
+          width: chatAnchor.width,
+          maxHeight: (chatAnchor as any).maxHeight || 'calc(100vh - 120px)',
           transition: 'opacity 0.25s ease, transform 0.25s ease',
           opacity: open ? 1 : 0,
           transform: open ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.97)',
@@ -402,13 +515,39 @@ export default function BonoriyaAI({ setCurrentPage }: Props) {
         </div>
       </div>
 
-      {/* ── Floating Button ── */}
-      <div className="fixed bottom-5 right-5 z-50">
+      {/* ── Floating Button (draggable) ── */}
+      <div
+        data-testid="bonoriya-ai-button-wrap"
+        className="fixed z-[60] select-none"
+        style={{
+          left: btnPos.x,
+          top: btnPos.y,
+          touchAction: 'none',
+          cursor: dragging ? 'grabbing' : 'grab',
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {/* Drag handle (visual hint, top-left corner) */}
+        <span
+          className="absolute -top-1 -left-1 w-5 h-5 bg-white/95 rounded-full shadow flex items-center justify-center pointer-events-none border border-border"
+          title="Drag to move"
+          aria-hidden="true"
+        >
+          <GripVertical style={{ width: 12, height: 12, color: '#0F2218' }} />
+        </span>
         <button
-          onClick={() => setOpen(o => !o)}
-          className="relative group flex items-center gap-2.5 pl-3.5 pr-4 h-13 bg-forest-900 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
-          style={{height: 52, transition: 'all 0.25s cubic-bezier(0.34,1.4,0.64,1)'}}
-          title="Chat with Bonoriya AI"
+          data-testid="bonoriya-ai-toggle"
+          onClick={(e) => {
+            // Suppress click if the user actually dragged the button
+            if (dragRef.current.moved) { e.preventDefault(); return; }
+            setOpen(o => !o);
+          }}
+          className="relative group flex items-center gap-2.5 pl-3.5 pr-4 h-13 bg-forest-900 text-white rounded-full shadow-xl hover:shadow-2xl transition-shadow duration-300"
+          style={{ height: 52, transition: 'box-shadow 0.25s cubic-bezier(0.34,1.4,0.64,1)' }}
+          title="Chat with Bonoriya AI (drag to move)"
         >
           {/* Pulse ring — shown until first open */}
           {pulsing && (

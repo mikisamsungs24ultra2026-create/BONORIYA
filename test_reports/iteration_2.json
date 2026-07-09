@@ -1,0 +1,61 @@
+{
+  "summary": "Tested Bonoriya AI chatbot removal from /admin + draggable floating button behavior on public routes. 6/8 test areas PASS. 1 CRITICAL BUG: clicking the floating button does NOT open the chat window for real user pointer events (only synthetic DOM .click() works). Also had to fix a Vite host-block config that made the preview URL unreachable.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "BonoriyaAI (floating toggle button)",
+        "issue": "Clicking the button with a real pointer/mouse does NOT open the chat window. Root cause: the draggable wrapper calls `setPointerCapture(e.pointerId)` on the wrapper in `onPointerDown`. This redirects the subsequent pointerup/mouseup to the wrapper element, so the click event is dispatched on the wrapper (parent div) — NOT on the child <button>. Therefore `button.onClick` (which calls setOpen) never fires. Verified via event listeners: only 'WRAP' click was captured, never 'BTN'. Confirmed on desktop 1920x800 gateway page.",
+        "selector": "[data-testid=\"bonoriya-ai-toggle\"]",
+        "priority": "CRITICAL",
+        "repro": "1) open /  2) real click on the Bonoriya AI floating button  3) opacity of [data-testid=bonoriya-ai-chat] stays 0",
+        "suggested_fix": "In onPointerUp, if !dragRef.current.moved, call setOpen(o => !o) and drop the button.onClick toggle. OR only call setPointerCapture AFTER movement > 4px is detected (in onPointerMove), not in onPointerDown."
+      },
+      {
+        "component": "BonoriyaAI touch drag on mobile",
+        "issue": "Synthetically dispatched PointerEvents (used for automated touch-drag testing) do not move the button. Likely because setPointerCapture throws on untrusted pointerId, causing the pointerdown handler to abort before setDragging(true). Real device touch input may still work but this could not be verified through Playwright's synthetic dispatch. The click-vs-drag detector uses pointer capture which is inherently coupled to real (trusted) events — this makes the widget hard to test and potentially fragile on some mobile browsers.",
+        "selector": "[data-testid=\"bonoriya-ai-button-wrap\"]",
+        "priority": "MEDIUM",
+        "suggested_fix": "Same as above — use a movement-threshold flag instead of setPointerCapture on pointerdown, or wrap setPointerCapture in a try/catch and don't gate dragging state on it."
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "passed_tests": {
+    "admin_route_hides_ai_desktop_1920x800": true,
+    "admin_route_hides_ai_mobile_390x844": true,
+    "public_routes_show_ai_button (/, /home, /book-stays, /our-properties, /day-trip)": true,
+    "mouse_drag_moves_button_desktop_center_within_50px_of_target": true,
+    "localStorage_key_bonoriya_ai_button_pos_v1_saved": true,
+    "position_persists_after_reload": true,
+    "mobile_chat_width_equals_viewport_minus_24 (366px @ 390 vw)": true,
+    "mobile_chat_no_horizontal_overflow": true,
+    "desktop_chat_width_380": true,
+    "desktop_chat_no_overflow": true,
+    "viewport_resize_1920->500_keeps_button_onscreen": true,
+    "click_opens_chat_via_pointer_events": false,
+    "click_closes_chat_via_pointer_events": "N/A (never opened)",
+    "click_via_DOM.click()_opens_chat": true,
+    "touch_drag_synthetic_moves_button": false
+  },
+  "action_items": [
+    "CRITICAL: Fix the BonoriyaAI floating button so a normal click opens the chat. Remove setPointerCapture from onPointerDown, or move the open/close logic into onPointerUp (when !dragRef.current.moved). Currently the AI chatbot is unusable by real users on desktop and touch devices.",
+    "Retest click-to-open on both desktop and mobile after the fix.",
+    "(Environment) Kept `server.allowedHosts: true` in /app/frontend/vite.config.ts so the preview URL loads — without it Vite returned a 'Blocked request' page. Please keep this config."
+  ],
+  "critical_code_review_comments": [
+    "BonoriyaAI.tsx line 296: `setPointerCapture(e.pointerId)` on the wrapper is the direct cause of the broken click handler. This should either be removed or applied only after a real drag threshold has been exceeded.",
+    "BonoriyaAI.tsx line 543: button.onClick uses `dragRef.current.moved` to suppress click after drag — this is now redundant because with setPointerCapture the click never reaches the button anyway.",
+    "App.tsx correctly excludes <BonoriyaAI/> from the /admin route via early return — verified.",
+    "vite.config.ts previously had no allowedHosts entry which broke access from the external preview URL — now fixed."
+  ],
+  "updated_files": ["/app/frontend/vite.config.ts"],
+  "success_rate": {"backend": "N/A (frontend-only)", "frontend": "~85% (critical click bug remaining)"},
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The /admin route correctly hides the AI. All 5 public routes correctly show it. Drag, persistence, responsive widths, resize clamping all work. The one remaining critical bug is that a real pointer click on the floating button does NOT open the chat because the wrapper calls setPointerCapture which reroutes mouseup to the wrapper, so click never fires on the child button. Confirmed via event listeners in browser. Fix: move open/close logic into onPointerUp gated by !moved OR delay setPointerCapture until drag threshold exceeded.",
+  "rca_of_the_issue": "React onClick handler on <button data-testid='bonoriya-ai-toggle'> never fires because parent <div data-testid='bonoriya-ai-button-wrap'> calls setPointerCapture(pointerId) in onPointerDown. Per Pointer Events spec, capturing the pointer causes subsequent pointer events (including the pointerup that synthesizes mouseup and click) to be redirected to the capture target (the wrapper). Since mousedown/mouseup both effectively target the wrapper, the click event fires on the wrapper — not on any descendant button. Therefore setOpen is never invoked. Reproduction: open /, click the AI floating button, observe [data-testid=bonoriya-ai-chat] opacity remains 0."
+}

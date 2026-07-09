@@ -230,12 +230,11 @@ export default function App() {
     setCurrentPage('home');
   };
 
-  // Admin page doesn't need header/footer
+  // Admin page doesn't need header/footer or AI chatbot
   if (currentPage === 'admin') {
     return (
       <>
         <AdminLogin isAdminLoggedIn={isAdminLoggedIn} setIsAdminLoggedIn={setIsAdminLoggedIn} />
-        <BonoriyaAI setCurrentPage={handleSetCurrentPage} />
       </>
     );
   }
