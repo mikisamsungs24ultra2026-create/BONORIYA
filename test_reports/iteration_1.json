@@ -1,0 +1,43 @@
+{
+  "summary": "SEO system verified end-to-end: backend endpoints, static sitemaps/robots, dynamic per-page SEO on deep links, ItemList on /our-properties, and image alt enrichment all pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/day-trips/:slug", "issues": ["og:image is a base64 data: URL (very large) instead of an https URL. Some social crawlers (Facebook/LinkedIn) reject/ignore data-URI og:image. Recommend uploading day-trip images to a CDN/Supabase storage and using the public URL, or falling back to https://bonoriya.com/og-banner.jpg."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_seo_backend.py",
+    "/app/test_reports/pytest/seo_backend.xml"
+  ],
+  "action_items": [
+    "Consider replacing base64 data-URI og:image on day-trip pages with a proper https URL for better OG compatibility (non-blocking)."
+  ],
+  "critical_code_review_comments": [
+    "Day-trip dynamic SEO emits data:image/jpeg;base64 for og:image (~50KB in <head>). This inflates HTML payload and is not universally supported by social scrapers.",
+    "Home page has 6 JSON-LD entities in 4 script tags (some grouped) — that satisfies the acceptance (>=3) but consider consolidating with @graph for cleanliness."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (6/6 pytest)", "frontend": "100% (all 8 acceptance items verified)"},
+  "verified_acceptance_criteria": {
+    "home": {"title_has_Bonoriya": true, "robots": "index,follow", "canonical": "https://bonoriya.com/", "jsonld_types": ["Organization","WebSite","LodgingBusiness","TouristAttraction","LocalBusiness","FAQPage"]},
+    "property_deep_link": {"title_prefix_ok": true, "canonical_ok": true, "schemas": ["LodgingBusiness","BreadcrumbList"], "og_image_is_real_property_photo": true},
+    "destination_deep_link": {"title_contains_Meghalaya": true, "canonical_ok": true, "schemas": ["TouristDestination","BreadcrumbList"]},
+    "daytrip_deep_link": {"schemas": ["TouristAttraction","BreadcrumbList"]},
+    "our_properties": {"title_ok": true, "canonical_ok": true, "ItemList_numberOfItems": 2},
+    "backend_regenerate_sitemap": {"ok": true, "counts_keys_present": ["properties","day_trips","destinations","core_pages"]},
+    "backend_sitemap_status": {"files_present": ["sitemap.xml","sitemap-properties.xml","sitemap-daytrips.xml","robots.txt"]},
+    "static_sitemap_index": {"references_all_5_children": true, "valid_xml": true},
+    "robots_txt": {"has_sitemap_directive": true, "has_disallow_admin": true},
+    "sitemap_properties_has_urls": true,
+    "sitemap_daytrips_has_urls": true,
+    "our_properties_images_alt": "8/8 imgs have non-empty alt via MutationObserver"
+  },
+  "test_credentials": "Not required (public SEO endpoints).",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend pytest at /app/backend/tests/test_seo_backend.py covers /api/seo/regenerate-sitemap, /api/seo/sitemap-status and validates the static XML files served by Vite. Frontend deep-link SEO verified via Playwright JS evaluation of document.title, canonical, og:image, and application/ld+json script @type values. Wait ~5s after nav for Supabase-driven SEO to hydrate."
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/0.9">
+  <url>
+    <loc>https://bonoriya.com/properties/kamakhya-homestay-by-bonoriya-773771</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://mltpbbbauvluhhddteoy.supabase.co/storage/v1/object/public/property-photos/1782200773771/1782298111057-69i6gqwja63.jpeg</image:loc>
+      <image:title>Kamakhya Homestay by Bonoriya </image:title>
+      <image:caption>Kamakhya Homestay by Bonoriya  — Assam, Assam</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bonoriya.com/properties/the-stay-corner-415588</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://mltpbbbauvluhhddteoy.supabase.co/storage/v1/object/public/property-photos/1781958415588/1782023488653-1suidkbgqqr.jpeg</image:loc>
+      <image:title>The Stay Corner</image:title>
+      <image:caption>The Stay Corner — Guwahati, Assam</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bonoriya.com/day-trips/burung-travellers-nest-390b10</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://mltpbbbauvluhhddteoy.supabase.co/storage/v1/object/public/bonoriya-assets/day-trip-properties/3c7d6895-a748-4816-9f74-333274390b10/1783346818584-ycz479ydhfn.jpg</image:loc>
+      <image:title>Burung Travellers Nest </image:title>
+      <image:caption>Burung Travellers Nest  — day trip</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bonoriya.com/day-trips/lake-view-homestay-chandubi-d98137</loc>
+    <lastmod>2026-07-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://mltpbbbauvluhhddteoy.supabase.co/storage/v1/object/public/bonoriya-assets/day-trip-properties/tmp-1783343401397/1783343401398-gnayznlw.jpg</image:loc>
+      <image:title>Lake View Homestay Chandubi </image:title>
+      <image:caption>Lake View Homestay Chandubi  — day trip</image:caption>
+    </image:image>
+  </url>
+</urlset>

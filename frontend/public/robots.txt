@@ -1,0 +1,55 @@
+User-agent: *
+
+# ── Public pages — allow all ──────────────────────────────────────────────────
+Allow: /
+Allow: /book-stays
+Allow: /our-properties
+Allow: /prefab
+Allow: /day-trip
+Allow: /blogs
+Allow: /contact
+Allow: /destinations
+Allow: /properties/
+Allow: /destinations/
+Allow: /day-trips/
+
+# State landing pages
+Allow: /stays-in-assam
+Allow: /stays-in-meghalaya
+Allow: /stays-in-arunachal-pradesh
+Allow: /stays-in-nagaland
+Allow: /stays-in-manipur
+Allow: /stays-in-mizoram
+Allow: /stays-in-tripura
+Allow: /stays-in-sikkim
+
+# City / destination pages
+Allow: /hotels-in-guwahati
+Allow: /hotels-in-kaziranga
+Allow: /hotels-in-tawang
+Allow: /homestays-in-shillong
+Allow: /homestay-in-imphal
+
+# Prefab pages
+Allow: /prefab-cottages
+Allow: /prefab-cottages-assam
+Allow: /modular-resorts
+Allow: /prefab-structures-assam
+
+# ── Private / admin pages — block crawlers ────────────────────────────────────
+Disallow: /admin
+Disallow: /admin/
+Disallow: /partner-login
+Disallow: /partner-dashboard
+Disallow: /api/
+Disallow: /checkout
+Disallow: /booking-confirm
+
+# ── Sitemaps ──────────────────────────────────────────────────────────────────
+Sitemap: https://bonoriya.com/sitemap.xml
+Sitemap: https://bonoriya.com/sitemap-core.xml
+Sitemap: https://bonoriya.com/sitemap-properties.xml
+Sitemap: https://bonoriya.com/sitemap-destinations.xml
+Sitemap: https://bonoriya.com/sitemap-daytrips.xml
+Sitemap: https://bonoriya.com/sitemap-images.xml
+Sitemap: https://bonoriya.com/blog-sitemap.xml

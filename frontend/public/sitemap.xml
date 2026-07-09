@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://bonoriya.com/sitemap-core.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://bonoriya.com/sitemap-properties.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://bonoriya.com/sitemap-destinations.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://bonoriya.com/sitemap-daytrips.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://bonoriya.com/sitemap-images.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://bonoriya.com/blog-sitemap.xml</loc>
+    <lastmod>2026-07-09</lastmod>
+  </sitemap>
+</sitemapindex>
